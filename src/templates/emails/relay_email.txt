@@ -1,0 +1,6 @@
+To: {{ user_mailbox['user_email'] }}
+From: Relayed from <{{ parsed_mail.mail['from'][0][1] }}>
+Reply-To: <noreply@segrob.studio>
+Subject: {{ parsed_mail.mail['subject'] }}
+
+{{ parsed_mail.text_plain[0] }}

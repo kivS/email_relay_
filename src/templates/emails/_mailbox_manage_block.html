@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Manage your mailbox</title>
+</head>
+<body style="padding: 0px;">
+	<table border="0" align="center" cellpadding="0" cellspacing="0" style="border: 1px solid black; border-collapse: collapse;">
+		<caption style="padding: 2px">Email Relay - Manage mailbox for: <small>{{ user_mailbox['mailbox_for'] }}</small></caption>
+		<thead>
+			<tr>
+				<th style="border: 1px solid black; padding: 5px;">Virus check</th>
+				<th style="border: 1px solid black; padding: 5px;">Spam check</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td style="border: 1px solid black; padding: 5px;">{{ parsed_mail.message['X-SES-Virus-Verdict'] }}</td>
+				<td style="border: 1px solid black; padding: 5px;">{{ parsed_mail.message['X-SES-Spam-Verdict'] }}</td>
+				<td style="border: 1px solid black; padding: 5px;"><a href="{{ mailbox_dashboard_url }}">Stop Receiving emails from this mailbox</a></td>
+			</tr>
+		</tbody>
+	</table>
+</body>
+</html>

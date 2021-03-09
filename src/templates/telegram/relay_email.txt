@@ -1,0 +1,5 @@
+From: {{ parsed_mail.mail['from'][0][1] }}
+Subject: {{ parsed_mail.mail['subject'] }}
+Received at: {{ parsed_mail.mail['date'] }}
+
+{{ "".join(parsed_mail.text_plain) }}

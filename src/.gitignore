@@ -1,0 +1,8 @@
+node_modules
+# folder for lambda python functions dependencies
+external_dependencies 
+*.zip
+.DS_Store
+credentials.py
+*.sqlite3
+__pycache__

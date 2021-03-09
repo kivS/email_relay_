@@ -1,0 +1,7 @@
+<Error Reporting>
+	What: {{ what }}
+	S3 email id: {{ s3_item_id }}
+	description: {{ description }}
+	Traceback: {{ traceback }}
+
+</Error Reporting>

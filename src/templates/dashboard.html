@@ -1,0 +1,241 @@
+<html>
+	<head>
+		<title>Dashboard - Hello</title>
+
+		<style>
+			a{
+				text-decoration: none;
+			}
+
+			main{
+				display: flex;
+			    flex-direction: row;
+			    flex-wrap: wrap;
+			    justify-content: center;
+			}
+
+			.new_mailbox_container{
+				flex: 0 0 80%;
+				margin: 1rem;
+				display: flex;
+			    flex-direction: column;
+			    align-items: center;
+			}
+
+			.mailboxes{
+				flex: 0 0 80%;
+				margin: 1rem;
+			}
+
+			.mailbox{
+				display: flex;
+			    flex-direction: column;
+				align-items: center;
+			    margin: 1rem;
+				border: 1px solid;
+				border-radius: 5px;
+				padding: 1rem;
+			}
+
+			.feedback_prompt{
+				width: 100px;
+				height: 25px;
+				border: 1px solid;
+				border-radius: 5px;
+				padding: 5px;
+				text-align: center;
+				position: fixed;
+				bottom: 0;
+				background: white;
+			}
+
+			.mailbox_email{
+				cursor: copy;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<a href="/">Home</a>
+			<a href="/dashboard">Dashboard</a>
+			<a href="{{url_for('logout')}}">logout</a>
+		</header>
+
+		<div class="feedback_prompt">
+			<a href="/feedback">Feedback</a>
+		</div>	
+
+		<main>
+			
+			<section class="new_mailbox_container">
+				<h3>Create new mailbox</h3>
+				<form id="new_mailbox">
+					<input type="text" name="new_mailbox_for" autocomplete="off" required="true" placeholder="mailbox description"/>
+					<input type="submit" value="Create">
+				</form>
+			</section>
+
+			<section id="mailboxes" class="mailboxes">
+				{# template for js to use to clone a new mailbox from #}
+				<div class="mailbox" style="display: none">
+					
+					<label for="mailbox_email">Mailbox:</label>
+					<p class="mailbox_email"></p>
+
+					<label for="mailbox_description">Description:</label>
+					<p class="mailbox_description"></p>
+
+					<a class="mailbox_details_link" href=""> details</a>
+				
+					<div class="mailbox_actions">
+						<button data-action="block"> Block </button>
+
+						<button data-action="unblock"> Unblock </button>
+					</div>
+				</div>
+
+				{% for mailbox in mailboxes  %}
+				<div id="{{mailbox.id}}" class="mailbox">
+
+					<label for="mailbox_email">Mailbox:</label>
+					
+					<address class="mailbox_email">{{ mailbox.generated_email}}</address>
+
+					<label for="mailbox_description">Description:</label>
+					<p class="mailbox_description">{{ mailbox.mailbox_for }}</p>
+
+					<a class="mailbox_details_link" href="{{ url_for('dashboard_mailbox', mailbox_id=mailbox.id) }}"> details</a>
+
+					<div class="mailbox_actions">
+						<button data-action="block" data-mailbox_id="{{mailbox.id}}" style="display: {{ 'none' if mailbox.is_blocked else 'initial'  }}"> Block </button>
+
+						<button data-action="unblock" data-mailbox_id="{{mailbox.id}}" style="display: {{ 'initial' if mailbox.is_blocked else 'none' }}"> Unblock </button>
+					</div>
+				</div>
+				{% endfor %}
+		
+			</section>
+
+		</main>
+	</body>
+
+	<script defer="true">
+
+		window.onerror = function (msg, url, lineNo, columnNo, error) {
+		      let message = {
+		            'message': msg,
+		            'url': 	   url,
+		            'line':    lineNo,
+		            'column':  columnNo,
+		            'stack':   error.stack,
+
+		       }
+		      fetch('/api/report_errors', { method: 'post' , body: JSON.stringify(message)})
+			  return false;
+		}
+
+		if('onunhandledrejection' in window){
+			window.onunhandledrejection = function(e) {
+				let message = {
+					'message': e.reason.message,
+					'stack':   e.reason.stack,
+					'error_type': e.type
+				}
+				fetch('/api/report_errors', { method: 'post' , body: JSON.stringify(message)})
+			}
+		}
+
+		let $ = (selector) => document.querySelector(selector);
+		let $$ = (selector) => document.querySelectorAll(selector);
+
+		async function mailbox_actions_click_handler(e){
+			e.stopPropagation()
+
+			if(e.target.nodeName != 'BUTTON') return;
+
+			let payload  = {
+				'action': e.target.dataset.action,
+				'mailbox_id': e.target.dataset.mailbox_id
+			}
+
+			const block_confirmation_msg = 'You won\'t be receiving further emails from this mailbox. Continue?'
+			if(payload.action == 'block' && !confirm(block_confirmation_msg)) return;
+
+			
+			try{
+				let response = await fetch('/api/mailbox-actions', { method: 'post' , body: JSON.stringify(payload)})
+
+				if(response.ok){
+					let alteration_confirmation = await response.json()
+
+					e.target.parentElement.querySelector('button[data-action="block"]').style.display = alteration_confirmation.is_blocked ? 'none' : 'initial'
+
+					e.target.parentElement.querySelector('button[data-action="unblock"]').style.display = alteration_confirmation.is_blocked ? 'initial': 'none'
+
+				}else{
+					alert('gracious error handling...')
+				}
+
+			}catch(err){
+				alert('something went kaput with request')
+				console.error(err)
+			}			
+
+		}
+
+
+		$('form#new_mailbox').addEventListener('submit', async (e) =>{
+			e.preventDefault();
+			
+			let form_data = new FormData(e.currentTarget)
+			for(x of form_data.entries()) console.log(x)
+
+			let response = await fetch('/api/create-mailbox', { method: 'post' , body: form_data})
+
+			if(response.ok){
+				let created_mailbox = await response.json()
+
+				let mailbox_clone = $('.mailbox').cloneNode(true)
+				const mailboxes_container =  $('#mailboxes')
+
+				// in case we copy the clone egg with display set to none
+				mailbox_clone.style.removeProperty('display')
+
+				// add the data
+				mailbox_clone.id = created_mailbox.id
+				mailbox_clone.querySelector('.mailbox_email').textContent = created_mailbox.generated_email
+				mailbox_clone.querySelector('.mailbox_description').textContent = created_mailbox.mailbox_for
+				mailbox_clone.querySelector('.mailbox_details_link').href = `/dashboard/mailboxes/${created_mailbox.id}`
+				mailbox_clone.querySelector('button[data-action="block"]').dataset.mailbox_id = created_mailbox.id
+				mailbox_clone.querySelector('button[data-action="unblock"]').dataset.mailbox_id = created_mailbox.id
+				mailbox_clone.querySelector('button[data-action="block"]').style.display = (created_mailbox.is_blocked) ? 'none': 'initial'
+				mailbox_clone.querySelector('button[data-action="unblock"]').style.display = (created_mailbox.is_blocked) ?  'initial': 'none'
+				// event listeners
+				mailbox_clone.addEventListener('click', mailbox_actions_click_handler)
+
+				// append clone mailbox into container
+				mailboxes_container.insertBefore(mailbox_clone, mailboxes_container.firstChild)
+
+				// clean form
+				e.target.querySelector('input[name="new_mailbox_for"]').value = ''
+
+				if("clipboard" in navigator){
+					await navigator.clipboard.writeText(created_mailbox.generated_email)
+				}
+
+			}else{
+				// TODO: more friendly user alert?
+				alert('Failed to create mailbox. Try again')
+			}
+
+			
+		})
+
+		$$('div.mailbox_actions').forEach(element =>{
+			element.addEventListener('click', mailbox_actions_click_handler)
+		})
+
+		
+
+	</script>
+</html>

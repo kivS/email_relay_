@@ -1,0 +1,8 @@
+<User feedback>
+	Email: {{user_email}}
+	IP address: {{request.remote_addr}}
+	User-agent: {{request.user_agent}}
+
+	{{user_message}} 
+	
+</User feedback>

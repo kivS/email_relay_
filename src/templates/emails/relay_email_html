@@ -1,0 +1,23 @@
+To: {{ user_mailbox['user_email'] }}
+Date: {{ parsed_mail.mail['date'] }}
+Subject: Relayed from {{ parsed_mail.mail['from'][0][1] }}: {{ parsed_mail.mail['subject'] }}
+{# wrapper mixed multipart to add our stuff and then have the original email contents nested within #}
+Content-Type: multipart/mixed; boundary="_00email-relay-boundary00_"; charset=utf-8
+
+--_00email-relay-boundary00_
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+{% include '/emails/_mailbox_manage_block.html' %}
+
+
+
+{# Main email contents #}
+--_00email-relay-boundary00_
+Content-Type: {{ parsed_mail.message['Content-Type'] }}
+
+{% set mail_message = parsed_mail.message.as_string() %}
+{# break the email into header and body and take the body #}
+{{ mail_message[mail_message.find('\n\n'):] }}
+
+--_00email-relay-boundary00_--

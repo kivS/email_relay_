@@ -1,0 +1,79 @@
+<html>
+	<head>
+		<title>User Registration page</title>
+
+		<style>
+			a{
+				text-decoration: none;
+			}
+
+			body{
+				display: flex;
+				flex-direction: column;
+			}
+
+			.container{
+				display: flex;
+				margin-top: 1rem;
+			}
+
+			.feedback_prompt{
+				width: 100px;
+				height: 25px;
+				border: 1px solid;
+				border-radius: 5px;
+				padding: 5px;
+				text-align: center;
+				position: fixed;
+				bottom: 0;
+				background: white;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="feedback_prompt">
+			<a href="/feedback">Feedback</a>
+		</div>	
+
+		<header>
+			<a href="/">Home</a>
+			<a href="/login">Login</a>
+		</header>	
+
+		<main class="container">
+			<form id="register_user">
+				<label for="email">Email Address</label>
+				<input type="email" required="true" name="email" autocomplete="email">
+				<button type="submit">Create your account</button>
+			</form>
+		</main>
+		<script defer="true">
+			let $ = (selector) => document.querySelector(selector);
+			let $$ = (selector) => document.querySelectorAll(selector);
+
+			$('form#register_user').addEventListener('submit', async (e) =>{
+				e.preventDefault()
+				
+				let form_data = new FormData(e.currentTarget)
+				for(x of form_data.entries()) console.log(x)
+
+				try{
+					let response = await fetch('/api/create_new_user', { method: 'post' , body: form_data})
+
+					if(!response.ok){
+						let err = await response.json()
+						alert(err.error)
+						return
+					}
+
+					alert('done! check your email')
+					// reset form
+					e.target.reset()
+
+				}catch(err){
+					console.log('something went wrong with user creation!')
+				}
+			})
+		</script>
+	</body>
+</html>

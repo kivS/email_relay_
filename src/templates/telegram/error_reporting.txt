@@ -1,0 +1,11 @@
+<Error Reporting>
+	Error Origin: {{ error_origin }}
+	Error type: {{ error_type }}
+	Message: {{ message }},
+	Url: {{ url }},
+	Line: {{ line }},
+	Column: {{column}},
+	User-agent: {{request.user_agent}},
+	Stack: {{ stack }}
+
+</Error Reporting>

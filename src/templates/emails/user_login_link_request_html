@@ -1,0 +1,1 @@
+Hello there, use this link to access your account: <a href="{{ login_url }}">Login magic link</a> 
